@@ -8,10 +8,10 @@ from systray import Systray
 from wrapper import Wrapper
 from os.path import expanduser
 from threading import Thread
-from PyQt4 import QtCore, QtGui, QtWebKit
-from PyQt4.Qt import QApplication, QKeySequence, QTimer
-from PyQt4.QtCore import QUrl, QSettings
-from PyQt4.QtWebKit import QWebSettings
+from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets, QtWebKitWidgets
+from PyQt5.Qt import QApplication, QKeySequence, QTimer
+from PyQt5.QtCore import QUrl, QSettings
+from PyQt5.QtWebKit import QWebSettings
 
 # Auto-detection of Unity and Dbusmenu in gi repository
 try:
@@ -21,7 +21,7 @@ except ImportError:
     Dbusmenu = None
     from launcher import DummyLauncher
 
-class ScudCloud(QtGui.QMainWindow):
+class ScudCloud(QtWidgets.QMainWindow):
 
     plugins = True
     debug = False
@@ -43,10 +43,10 @@ class ScudCloud(QtGui.QMainWindow):
         self.leftPane = LeftPane(self)
         webView = Wrapper(self)
         webView.page().networkAccessManager().setCookieJar(self.cookiesjar)
-        self.stackedWidget = QtGui.QStackedWidget()
+        self.stackedWidget = QtWidgets.QStackedWidget()
         self.stackedWidget.addWidget(webView)
-        centralWidget = QtGui.QWidget(self)
-        layout = QtGui.QHBoxLayout()
+        centralWidget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.leftPane)
@@ -146,14 +146,14 @@ class ScudCloud(QtGui.QMainWindow):
                 "exit":        self.createAction("Quit", self.exit, QKeySequence.Quit)
             },
             "edit": {
-                "undo":        self.current().pageAction(QtWebKit.QWebPage.Undo),
-                "redo":        self.current().pageAction(QtWebKit.QWebPage.Redo),
-                "cut":         self.current().pageAction(QtWebKit.QWebPage.Cut),
-                "copy":        self.current().pageAction(QtWebKit.QWebPage.Copy),
-                "paste":       self.current().pageAction(QtWebKit.QWebPage.Paste),
-                "back":        self.current().pageAction(QtWebKit.QWebPage.Back),
-                "forward":     self.current().pageAction(QtWebKit.QWebPage.Forward),
-                "reload":      self.current().pageAction(QtWebKit.QWebPage.Reload)
+                "undo":        self.current().pageAction(QtWebKitWidgets.QWebPage.Undo),
+                "redo":        self.current().pageAction(QtWebKitWidgets.QWebPage.Redo),
+                "cut":         self.current().pageAction(QtWebKitWidgets.QWebPage.Cut),
+                "copy":        self.current().pageAction(QtWebKitWidgets.QWebPage.Copy),
+                "paste":       self.current().pageAction(QtWebKitWidgets.QWebPage.Paste),
+                "back":        self.current().pageAction(QtWebKitWidgets.QWebPage.Back),
+                "forward":     self.current().pageAction(QtWebKitWidgets.QWebPage.Forward),
+                "reload":      self.current().pageAction(QtWebKitWidgets.QWebPage.Reload)
             },
             "view": {
                 "zoomin":      self.createAction("Zoom In", self.zoomIn, QKeySequence.ZoomIn),
@@ -211,7 +211,7 @@ class ScudCloud(QtGui.QMainWindow):
         self.menus["help"]["help"].setEnabled(enabled == True)
 
     def createAction(self, text, slot, shortcut=None, checkable=False):
-        action = QtGui.QAction(text, self)
+        action = QtWidgets.QAction(text, self)
         if shortcut is not None:
             action.setShortcut(shortcut)
         action.triggered.connect(slot)
@@ -263,7 +263,7 @@ class ScudCloud(QtGui.QMainWindow):
             self.focusInEvent(event)
         if event.type() == QtCore.QEvent.KeyPress:
             # Ctrl + <n>
-            if QtGui.QApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
+            if QApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
                 if event.key() == QtCore.Qt.Key_1:   self.leftPane.click(0)
                 elif event.key() == QtCore.Qt.Key_2: self.leftPane.click(1)
                 elif event.key() == QtCore.Qt.Key_3: self.leftPane.click(2)
@@ -277,13 +277,13 @@ class ScudCloud(QtGui.QMainWindow):
                 elif event.key() == QtCore.Qt.Key_Tab: self.leftPane.clickNext(1)
   
             # ctrl + backtab
-            if (QtGui.QApplication.keyboardModifiers() & QtCore.Qt.ControlModifier) and (QtGui.QApplication.keyboardModifiers() & QtCore.Qt.ShiftModifier):
+            if (QApplication.keyboardModifiers() & QtCore.Qt.ControlModifier) and (QApplication.keyboardModifiers() & QtCore.Qt.ShiftModifier):
                 if event.key() == QtCore.Qt.Key_Backtab: self.leftPane.clickNext(-1)
                         
             # Ctrl + Shift + <key>
-            if (QtGui.QApplication.keyboardModifiers() & QtCore.Qt.ShiftModifier) and (QtGui.QApplication.keyboardModifiers() & QtCore.Qt.ShiftModifier):
+            if (QApplication.keyboardModifiers() & QtCore.Qt.ShiftModifier) and (QApplication.keyboardModifiers() & QtCore.Qt.ShiftModifier):
                 if event.key() == QtCore.Qt.Key_V: self.current().createSnippet()
-        return QtGui.QMainWindow.eventFilter(self, obj, event);
+        return QtWidgets.QMainWindow.eventFilter(self, obj, event);
 
     def focusInEvent(self, event):
         self.launcher.set_property("urgent", False)

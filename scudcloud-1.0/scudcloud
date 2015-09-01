@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
-from PyQt4 import QtGui
+from PyQt5 import QtGui
 
 def get_install_dir():
     """

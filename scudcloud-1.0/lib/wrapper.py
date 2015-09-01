@@ -1,9 +1,10 @@
 import sys, subprocess, os
-from PyQt4 import QtWebKit, QtGui, QtCore
-from PyQt4.Qt import QApplication, QKeySequence
-from PyQt4.QtCore import QBuffer, QByteArray, QUrl, SIGNAL
-from PyQt4.QtWebKit import QWebView, QWebPage, QWebSettings
-from PyQt4.QtNetwork import QNetworkProxy
+from PyQt5 import QtWebKit, QtGui, QtCore
+from PyQt5.Qt import QApplication, QKeySequence
+from PyQt5.QtCore import QBuffer, QByteArray, QUrl
+from PyQt5.QtWebKit import QWebSettings
+from PyQt5.QtWebKitWidgets import QWebView, QWebPage
+from PyQt5.QtNetwork import QNetworkProxy
 
 from urllib.parse import urlparse
 from resources import Resources
@@ -11,7 +12,7 @@ from resources import Resources
 class Wrapper(QWebView):
 
     messages = 0
-    urlChanged = False
+    hasUrlChanged = False
 
     def __init__(self, window):
         self.configure_proxy()
@@ -20,10 +21,10 @@ class Wrapper(QWebView):
         with open(Resources.get_path("scudcloud.js"), "r") as f:
             self.js = f.read()
         self.setZoomFactor(self.window.zoom)
-        self.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
-        self.connect(self, SIGNAL("urlChanged(const QUrl&)"), self.urlChanged)
-        self.connect(self, SIGNAL("loadFinished(bool)"), self.loadFinished)
-        self.connect(self, SIGNAL("linkClicked(const QUrl&)"), self.linkClicked)
+        self.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
+        self.urlChanged.connect(self.onUrlChanged)
+        self.loadFinished.connect(self.onLoadFinished)
+        self.linkClicked.connect(self.onLinkClicked)
         self.addActions()
 
     def configure_proxy(self):
@@ -56,7 +57,7 @@ class Wrapper(QWebView):
             arg = ""
         return self.page().currentFrame().evaluateJavaScript("ScudCloud."+function+"("+arg+");")
 
-    def urlChanged(self, qUrl):
+    def onUrlChanged(self, qUrl):
         self.urlChanged = True
         url = qUrl.toString()
         # Some integrations/auth will get back to /services with no way to get back to chat
@@ -70,22 +71,23 @@ class Wrapper(QWebView):
             if url.endswith("/messages"):
                 self.window.settings.setValue("Domain", 'https://'+qUrl.host())
 
-    def loadFinished(self, ok):
-        if not self.urlChanged:
+    def onLoadFinished(self, ok):
+        if not self.hasUrlChanged:
             self.inject()
-            self.urlChanged = False
+            self.hasUrlChanged = False
 
     def inject(self):
         self.page().currentFrame().addToJavaScriptWindowObject("desktop", self)
         boot_data = self.page().currentFrame().evaluateJavaScript(self.js)
-        self.window.quicklist(boot_data['channels'])
-        self.window.teams(boot_data['teams'])
-        self.window.enableMenus(self.isConnected())        
+        if boot_data is not None and boot_data['channels'] is not None and boot_data['teams'] is not None:
+            self.window.quicklist(boot_data['channels'])
+            self.window.teams(boot_data['teams'])
+            self.window.enableMenus(self.isConnected())
 
     def systemOpen(self, url):
         subprocess.call(('xdg-open', url))
 
-    def linkClicked(self, qUrl):
+    def onLinkClicked(self, qUrl):
         url = qUrl.toString()
         handle_link = (
             Resources.SIGNIN_URL == url or
