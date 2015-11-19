@@ -11,6 +11,7 @@ from threading import Thread
 from PyQt5 import QtCore, QtGui, QtWebKit, QtWidgets, QtWebKitWidgets
 from PyQt5.Qt import QApplication, QKeySequence, QTimer
 from PyQt5.QtCore import QUrl, QSettings
+from PyQt5.QtNetwork import QNetworkDiskCache
 from PyQt5.QtWebKit import QWebSettings
 
 # Auto-detection of Unity and Dbusmenu in gi repository
@@ -80,6 +81,11 @@ class ScudCloud(QtWidgets.QMainWindow):
         QWebSettings.globalSettings().setAttribute(QWebSettings.JavaEnabled, False)
         # We don't need History
         QWebSettings.globalSettings().setAttribute(QWebSettings.PrivateBrowsingEnabled, True)
+        # Enabling Local Storage (now required by Slack)
+        QWebSettings.globalSettings().setAttribute(QWebSettings.LocalStorageEnabled, True)
+        # Enabling Cache
+        self.diskCache = QNetworkDiskCache(self)
+        self.diskCache.setCacheDirectory(self.settings_path)
         # Required for copy and paste clipboard integration
         QWebSettings.globalSettings().setAttribute(QWebSettings.JavascriptCanAccessClipboard, True)
         # Enabling Inspeclet only when --debug=True (requires more CPU usage)
